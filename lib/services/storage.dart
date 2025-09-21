@@ -2,21 +2,17 @@ import 'package:hive/hive.dart';
 import '../models/product.dart';
 
 class StorageService {
-  final Box<Product> box = Hive.box<Product>('history');
+  late final Box<Product> _box;
 
-  Future<void> addProduct(Product p) async {
-    await box.add(p);
+  StorageService() {
+    _box = Hive.box<Product>('history'); // già aperto in main.dart
   }
 
-  List<Product> getAll() {
-    return box.values.toList().reversed.toList();
-  }
+  Future<void> addProduct(Product p) async => await _box.add(p);
 
-  Future<void> clearAll() async {
-    await box.clear();
-  }
+  List<Product> getAll() => _box.values.toList().reversed.toList();
 
-  Future<void> deleteAt(int index) async {
-    await box.deleteAt(index);
-  }
+  Future<void> clearAll() async => await _box.clear();
+
+  Future<void> deleteAt(int index) async => await _box.deleteAt(index);
 }

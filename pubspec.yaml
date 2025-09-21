@@ -45,6 +45,6 @@ dev_dependencies:
 
 flutter:
   assets:
-    - assets\data\products_mock.json
-    - assets\data\co2_per_category.json
+    - assets/data/products_mock.json
+    - assets/data/co2_per_category.json
   uses-material-design: true

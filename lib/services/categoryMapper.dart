@@ -54,8 +54,9 @@ class CategoryMapper {
 
   /// Restituisce il nome della categoria OWID data una lista di tags OFF
   static Future<String> mapToOwIdCategory(List<String> offTags) async {
-    for (final tag in offTags) {
-      final key = tag.toLowerCase();
+    for (final raw in offTags) {
+      // Normalizza: rimuove prefisso lingua ("en:", "it:", ecc.)
+      final key = raw.replaceAll(RegExp(r'^[a-z]{2}:'), '').toLowerCase();
       if (_mapping.containsKey(key)) {
         return _mapping[key]!;
       }
@@ -63,7 +64,7 @@ class CategoryMapper {
     return "Vegetables"; // fallback se non trovato
   }
 
-  /// Restituisce direttamente il valore CO₂ in base ai tags
+  /// Restituisce il valore CO₂ in base ai tags
   static Future<double> getImpactFromTags(List<String> offTags) async {
     final category = await mapToOwIdCategory(offTags);
     return await CategoryImpactService.getImpact(category);

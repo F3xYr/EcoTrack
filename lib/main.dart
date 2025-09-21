@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
-import 'screens/home.dart'; // assicurati di avere la tua HomeScreen qui
-import 'theme/colors.dart'; // nuovo file con i colori
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'screens/home.dart';
+import 'theme/colors.dart';
+import 'models/product.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final appDir = await getApplicationDocumentsDirectory();
+  await Hive.initFlutter(appDir.path);
+
+  // Registrazione adapter se Hive per Product
+  Hive.registerAdapter(ProductAdapter());
+
+  await Hive.openBox('userStats');
+  await Hive.openBox<Product>('history');
+
   runApp(const EcoTrackApp());
 }
 
@@ -41,7 +55,7 @@ class EcoTrackApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
         ),
         textTheme: const TextTheme(
@@ -49,7 +63,7 @@ class EcoTrackApp extends StatelessWidget {
           bodyLarge: TextStyle(color: EcoColors.dark),
         ),
       ),
-      home: HomeScreen(), // tua schermata principale
+      home: HomeScreen(),
     );
   }
 }

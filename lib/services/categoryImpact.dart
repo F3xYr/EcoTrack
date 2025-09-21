@@ -8,12 +8,17 @@ class CategoryImpactService {
     if (_cache != null) return _cache!;
     final String data = await rootBundle.loadString('assets/data/co2_per_category.json');
     final Map<String, dynamic> json = jsonDecode(data);
-    _cache = json.map((key, value) => MapEntry(key, (value as num).toDouble()));
+
+    // Normalizza chiavi (prima lettera maiuscola)
+    _cache = json.map((key, value) {
+      final normalizedKey = key[0].toUpperCase() + key.substring(1).toLowerCase();
+      return MapEntry(normalizedKey, (value as num).toDouble());
+    });
     return _cache!;
   }
 
   static Future<double> getImpact(String category) async {
     final impacts = await loadImpacts();
-    return impacts[category] ?? 2.0; // fallback generico
+    return impacts[category] ?? 2.0;
   }
 }

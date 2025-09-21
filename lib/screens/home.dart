@@ -39,9 +39,14 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       const Icon(Icons.local_fire_department, color: Colors.orange, size: 32),
                       const SizedBox(width: 8),
-                      Text(
-                        'Streak: $streak giorni',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ValueListenableBuilder<int>(
+                        valueListenable: StreakService.currentStreakNotifier,
+                        builder: (context, streak, _) {
+                          return Text(
+                            'Streak: $streak giorni',
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          );
+                        },
                       ),
                     ],
                   );

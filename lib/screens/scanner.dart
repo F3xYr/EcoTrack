@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:ecotrack/screens/home.dart';
+import 'package:ecotrack/services/streak.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -20,15 +21,37 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
-  final storage = StorageService();
-  final scannerService = ScannerService();
-  final picker = ImagePicker();
+  StorageService? storage;
+  StreakService? streakService;
 
+  final picker = ImagePicker();
   String _status = "Seleziona un'opzione per iniziare";
   bool isProcessing = false;
-  bool showCamera = false; // serve per attivare/disattivare la modalità barcode
+  bool showCamera = false;
+  bool isReady = false; // indica se Hive è pronto
 
-  /// 🔹 OCR: foto scontrino
+  @override
+  void initState() {
+    super.initState();
+    _initServices();
+  }
+
+  Future<void> _initServices() async {
+    try{
+      // Attende che Hive sia pronto
+      storage = StorageService();
+      streakService = StreakService();
+      setState(() {
+        isReady = true;
+      });
+    } catch (e){
+      setState(() {
+        isReady = false;
+      });
+    }
+  }
+
+  /// OCR: foto scontrino
   /*Future<void> _scanReceipt() async {
     final XFile? pickedFile =
         await picker.pickImage(source: ImageSource.camera, imageQuality: 80);
@@ -55,7 +78,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     });
   }*/
 
-  /// 🔹 Barcode scanner
+  /// Barcode scanner
   /*void _onDetect(BarcodeCapture capture) async {
     if (isProcessing) return;
     isProcessing = true;
@@ -81,8 +104,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
     isProcessing = false;
   }*/
 
-  void _onDetect(BarcodeCapture capture) async {
-  if (isProcessing) return;
+void _onDetect(BarcodeCapture capture) async {
+  if (!isReady || isProcessing) return;
   isProcessing = true;
 
   final List<Barcode> barcodes = capture.barcodes;
@@ -91,32 +114,27 @@ class _ScannerScreenState extends State<ScannerScreen> {
     setState(() => _status = "Trovato: $rawValue");
 
     final productData = await OpenFoodFactsService.fetchProduct(rawValue);
-    streakService.updateStreak();
+    streakService!.updateStreak();
 
     if (productData != null) {
       String name = productData["product_name"] ?? "Prodotto sconosciuto";
       List<String> tags = List<String>.from(productData["categories_tags"] ?? []);
       double co2 = await CategoryMapper.getImpactFromTags(tags);
 
-      // Chiudi scanner e vai alla schermata dettaglio
+      final product = Product(name: name, co2: co2, alternative: "N/A");
+      await storage?.addProduct(product);
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => ProductDetailScreen(
-            name: name,
-            co2: co2,
-          ),
+          builder: (_) => ProductDetailScreen(name: name, co2: co2),
         ),
       );
     } else {
-      // Chiudi scanner e mostra schermata di errore
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => const ProductDetailScreen(
-            name: "Prodotto non trovato",
-            co2: 0,
-          ),
+          builder: (_) => const ProductDetailScreen(name: "Prodotto non trovato", co2: 0),
         ),
       );
     }
@@ -137,22 +155,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
           if (!showCamera) ...[
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              /*style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3BAE60),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32, vertical: 16),
-              ),*/
               onPressed: () => setState(() => showCamera = true),
               icon: const Icon(Icons.qr_code_scanner),
               label: const Text("Scansiona Barcode"),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              /*style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3BAE60),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32, vertical: 16),
-              ),*/
               onPressed:  null/*_scanReceipt*/,
               icon: const Icon(Icons.receipt_long),
               label: const Text("Scansiona Scontrino (OCR)"),
@@ -184,3 +192,5 @@ class _ScannerScreenState extends State<ScannerScreen> {
     );
   }
 }
+
+
