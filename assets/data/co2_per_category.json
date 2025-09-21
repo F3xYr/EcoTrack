@@ -1,0 +1,17 @@
+{
+  "Beef": 60.0,
+  "Lamb": 24.0,
+  "Cheese": 21.0,
+  "Pork": 7.0,
+  "Poultry": 6.0,
+  "Fish": 5.0,
+  "Eggs": 4.5,
+  "Rice": 4.0,
+  "Milk": 1.2,
+  "Vegetables": 2.0,
+  "Fruits": 1.5,
+  "Legumes": 0.9,
+  "Nuts": 0.4,
+  "Potatoes": 0.3,
+  "Peas": 0.25
+}
